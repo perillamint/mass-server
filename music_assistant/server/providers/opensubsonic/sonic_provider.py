@@ -495,7 +495,11 @@ class OpenSonicProvider(MusicProvider):
         """Return the requested Album."""
         try:
             sonic_album: SonicAlbum = await self._run_async(self._conn.getAlbum, prov_album_id)
-            sonic_info = await self._run_async(self._conn.getAlbumInfo2, aid=prov_album_id)
+            try:
+                sonic_info = await self._run_async(self._conn.getAlbumInfo2, aid=prov_album_id)
+            except KeyError:
+                # It seems the server does not support getAlbuminfo2. Fall back to getAlbumInfo
+                sonic_info = await self._run_async(self._conn.getAlbumInfo, aid=prov_album_id)
         except (ParameterError, DataNotFoundError) as e:
             if self._enable_podcasts:
                 # This might actually be a 'faked' album from podcasts, try that before giving up
